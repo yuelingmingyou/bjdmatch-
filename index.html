@@ -7,290 +7,150 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="bg-gradient"></div>
-    
     <div class="app">
-        <header class="glass">
+        <header>
             <div class="logo">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <circle cx="12" cy="12" r="10"/>
-                    <circle cx="9" cy="10" r="2" fill="currentColor" stroke="none"/>
-                    <circle cx="15" cy="10" r="2" fill="currentColor" stroke="none"/>
-                    <path d="M8 15c1.5 2 3.5 2 5 0" stroke-linecap="round"/>
+                    <circle cx="9" cy="10" r="1.5" fill="currentColor" stroke="none"/>
+                    <circle cx="15" cy="10" r="1.5" fill="currentColor" stroke="none"/>
+                    <path d="M8 14c1.5 2 3.5 2 5 0"/>
                 </svg>
                 <span>BJD Match</span>
             </div>
             <div class="header-actions">
-                <button onclick="app.exportData()" class="btn btn-ghost">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button onclick="app.exportData()" class="icon-btn" title="导出">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="7 10 12 15 17 10"/>
                         <line x1="12" y1="15" x2="12" y2="3"/>
                     </svg>
-                    导出
                 </button>
-                <label class="btn btn-ghost">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <label class="icon-btn" title="导入">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="17 8 12 3 7 8"/>
                         <line x1="12" y1="3" x2="12" y2="15"/>
                     </svg>
-                    导入
                     <input type="file" id="importFile" accept=".json" hidden onchange="app.importData(this)">
                 </label>
-                <button onclick="app.clearAll()" class="btn btn-ghost btn-danger">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button onclick="app.clearAll()" class="icon-btn danger" title="清空">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"/>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                     </svg>
-                    清空
                 </button>
             </div>
         </header>
 
-        <div class="stats glass">
-            <div class="stat-item">
-                <div class="stat-num" id="faceCount">0</div>
-                <div class="stat-label">脸片</div>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <div class="stat-num" id="frontHairCount">0</div>
-                <div class="stat-label">前发</div>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <div class="stat-num" id="backHairCount">0</div>
-                <div class="stat-label">后发</div>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <div class="stat-num" id="matchCount">0</div>
-                <div class="stat-label">匹配</div>
-            </div>
-        </div>
-
-        <nav class="tabs glass">
-            <button class="tab active" onclick="app.switchTab('faces', this)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                </svg>
-                脸片
-            </button>
-            <button class="tab" onclick="app.switchTab('hairs', this)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/>
-                    <path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/>
-                    <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/>
-                </svg>
-                前后发
-            </button>
-            <button class="tab" onclick="app.switchTab('matches', this)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                匹配
-            </button>
+        <nav class="tabs">
+            <button class="tab active" onclick="app.switchTab('faces', this)">脸片</button>
+            <button class="tab" onclick="app.switchTab('hairs', this)">前后发</button>
+            <button class="tab" onclick="app.switchTab('matches', this)">匹配</button>
         </nav>
 
-        <!-- 脸片页 -->
+        <!-- 脸片 -->
         <div id="tab-faces" class="tab-panel active">
-            <div class="panel glass">
-                <h2 class="panel-title">添加脸片</h2>
-                <form id="faceForm" onsubmit="app.saveFace(event)">
-                    <input type="hidden" id="faceId">
-                    <div class="form-grid">
-                        <div class="field">
-                            <label>名称</label>
-                            <input type="text" id="faceName" required placeholder="Volks DD 01">
-                        </div>
-                        <div class="field">
-                            <label>品牌</label>
-                            <input type="text" id="faceBrand" placeholder="Volks">
-                        </div>
-                        <div class="field">
-                            <label>眼珠尺寸 (mm)</label>
-                            <input type="number" id="eyeSize" step="0.5" required placeholder="18">
-                        </div>
-                        <div class="field">
-                            <label>头围 (cm)</label>
-                            <input type="number" id="headSize" step="0.1" placeholder="21.5">
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label>备注</label>
-                        <textarea id="faceNote" rows="2" placeholder="肤色、结构特征等"></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" id="faceSubmitBtn">添加</button>
-                        <button type="button" class="btn btn-secondary" onclick="app.cancelEdit('face')">取消</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="panel glass filter-panel">
-                <div class="filter-row">
-                    <div class="field">
-                        <label>眼珠尺寸</label>
-                        <select id="eyeSizeFilter" onchange="app.filterFaces()">
-                            <option value="">全部</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>搜索</label>
-                        <input type="text" id="faceSearch" placeholder="名称、品牌..." oninput="app.filterFaces()">
-                    </div>
+            <form id="faceForm" onsubmit="app.saveFace(event)" class="compact-form">
+                <input type="hidden" id="faceId">
+                <div class="form-line">
+                    <input type="text" id="faceName" required placeholder="脸片名称" class="flex-2">
+                    <input type="text" id="faceBrand" placeholder="品牌" class="flex-1">
                 </div>
+                <div class="form-line">
+                    <input type="number" id="eyeSize" step="0.5" required placeholder="眼珠mm">
+                    <input type="number" id="headSize" step="0.1" placeholder="头围cm">
+                    <button type="submit" class="btn-primary" id="faceSubmitBtn">添加</button>
+                    <button type="button" class="btn-ghost" onclick="app.cancelEdit('face')">取消</button>
+                </div>
+                <input type="text" id="faceNote" placeholder="备注（肤色、结构等）" class="full">
+            </form>
+
+            <div class="filter-bar">
+                <select id="eyeSizeFilter" onchange="app.filterFaces()">
+                    <option value="">全部眼珠</option>
+                </select>
+                <input type="text" id="faceSearch" placeholder="搜索..." oninput="app.filterFaces()">
             </div>
 
-            <div class="list-header">
-                <h3>脸片库 <span class="badge" id="faceListCount">0</span></h3>
-            </div>
-            <div id="faceList" class="card-grid"></div>
+            <div class="list" id="faceList"></div>
         </div>
 
-        <!-- 前后发页 -->
+        <!-- 前后发 -->
         <div id="tab-hairs" class="tab-panel">
-            <div class="panel glass">
-                <h2 class="panel-title">添加配件</h2>
-                <form id="hairForm" onsubmit="app.saveHair(event)">
-                    <input type="hidden" id="hairId">
-                    <div class="form-grid">
-                        <div class="field">
-                            <label>名称</label>
-                            <input type="text" id="hairName" required placeholder="DD 默认前发-黑">
-                        </div>
-                        <div class="field">
-                            <label>类型</label>
-                            <select id="hairType" required>
-                                <option value="front">前发</option>
-                                <option value="back">后发</option>
-                                <option value="set">套装</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label>品牌</label>
-                            <input type="text" id="hairBrand" placeholder="Volks">
-                        </div>
-                        <div class="field">
-                            <label>参考头围 (cm)</label>
-                            <input type="number" id="hairHeadSize" step="0.1" placeholder="21.5">
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label>结构特征</label>
-                        <textarea id="hairNote" rows="2" placeholder="卡扣类型、材质等"></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" id="hairSubmitBtn">添加</button>
-                        <button type="button" class="btn btn-secondary" onclick="app.cancelEdit('hair')">取消</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="panel glass">
-                <div class="type-filters">
-                    <button class="type-filter active" onclick="app.filterHairs('all', this)">全部</button>
-                    <button class="type-filter" onclick="app.filterHairs('front', this)">前发</button>
-                    <button class="type-filter" onclick="app.filterHairs('back', this)">后发</button>
-                    <button class="type-filter" onclick="app.filterHairs('set', this)">套装</button>
+            <form id="hairForm" onsubmit="app.saveHair(event)" class="compact-form">
+                <input type="hidden" id="hairId">
+                <div class="form-line">
+                    <input type="text" id="hairName" required placeholder="配件名称" class="flex-2">
+                    <select id="hairType" required>
+                        <option value="front">前发</option>
+                        <option value="back">后发</option>
+                        <option value="set">套装</option>
+                    </select>
+                    <button type="submit" class="btn-primary" id="hairSubmitBtn">添加</button>
+                    <button type="button" class="btn-ghost" onclick="app.cancelEdit('hair')">取消</button>
                 </div>
+                <div class="form-line">
+                    <input type="text" id="hairBrand" placeholder="品牌" class="flex-1">
+                    <input type="number" id="hairHeadSize" step="0.1" placeholder="参考头围cm">
+                    <input type="text" id="hairNote" placeholder="结构特征" class="flex-2">
+                </div>
+            </form>
+
+            <div class="type-tabs">
+                <button class="type-tab active" onclick="app.filterHairs('all', this)">全部</button>
+                <button class="type-tab" onclick="app.filterHairs('front', this)">前发</button>
+                <button class="type-tab" onclick="app.filterHairs('back', this)">后发</button>
+                <button class="type-tab" onclick="app.filterHairs('set', this)">套装</button>
             </div>
 
-            <div class="list-header">
-                <h3>配件库</h3>
-            </div>
-            <div id="hairList" class="card-grid"></div>
+            <div class="list" id="hairList"></div>
         </div>
 
-        <!-- 匹配页 -->
+        <!-- 匹配 -->
         <div id="tab-matches" class="tab-panel">
-            <div class="panel glass">
-                <h2 class="panel-title">记录匹配</h2>
-                <form id="matchForm" onsubmit="app.saveMatch(event)">
-                    <div class="field">
-                        <label>脸片</label>
-                        <select id="matchFace" required>
-                            <option value="">选择脸片</option>
-                        </select>
-                    </div>
-                    <div class="form-grid">
-                        <div class="field">
-                            <label>前发</label>
-                            <select id="matchFrontHair">
-                                <option value="">无</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label>后发</label>
-                            <select id="matchBackHair">
-                                <option value="">无</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label>匹配结果</label>
-                        <div class="result-options">
-                            <label class="result-opt perfect">
-                                <input type="radio" name="matchResult" value="perfect" required>
-                                <span class="opt-indicator"></span>
-                                <span>完美匹配</span>
-                            </label>
-                            <label class="result-opt good">
-                                <input type="radio" name="matchResult" value="good">
-                                <span class="opt-indicator"></span>
-                                <span>可用需调整</span>
-                            </label>
-                            <label class="result-opt poor">
-                                <input type="radio" name="matchResult" value="poor">
-                                <span class="opt-indicator"></span>
-                                <span>不匹配</span>
-                            </label>
-                            <label class="result-opt unknown">
-                                <input type="radio" name="matchResult" value="unknown">
-                                <span class="opt-indicator"></span>
-                                <span>待测试</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label>详细说明</label>
-                        <textarea id="matchDetail" rows="2" placeholder="松紧度、需要修改的地方等"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">记录匹配</button>
-                </form>
-            </div>
-
-            <div class="panel glass">
-                <h2 class="panel-title">查询</h2>
-                <div class="query-tabs">
-                    <button class="query-tab active" onclick="app.setQueryMode('byFace', this)">按脸片查</button>
-                    <button class="query-tab" onclick="app.setQueryMode('byHair', this)">按配件查</button>
-                </div>
-                <div class="field" id="queryFaceField">
-                    <label>选择脸片</label>
-                    <select id="queryFace" onchange="app.queryMatches()">
-                        <option value="">选择...</option>
+            <form id="matchForm" onsubmit="app.saveMatch(event)" class="compact-form">
+                <div class="form-line">
+                    <select id="matchFace" required>
+                        <option value="">选择脸片</option>
+                    </select>
+                    <select id="matchFrontHair">
+                        <option value="">前发</option>
+                    </select>
+                    <select id="matchBackHair">
+                        <option value="">后发</option>
                     </select>
                 </div>
-                <div class="field" id="queryHairField" style="display:none">
-                    <label>选择配件</label>
-                    <select id="queryHair" onchange="app.queryByHair()">
-                        <option value="">选择...</option>
-                    </select>
+                <div class="result-pick">
+                    <label><input type="radio" name="matchResult" value="perfect" required><span class="ok">匹配</span></label>
+                    <label><input type="radio" name="matchResult" value="good"><span class="warn">可调</span></label>
+                    <label><input type="radio" name="matchResult" value="poor"><span class="bad">不行</span></label>
+                    <label><input type="radio" name="matchResult" value="unknown"><span class="maybe">未测</span></label>
                 </div>
-                <div id="matchResults" class="results-area">
-                    <div class="empty-hint">选择上方条件查看匹配结果</div>
+                <div class="form-line">
+                    <input type="text" id="matchDetail" placeholder="详细说明（松紧度、修改点等）" class="full">
+                    <button type="submit" class="btn-primary">记录</button>
                 </div>
+            </form>
+
+            <div class="query-toggle">
+                <button class="active" onclick="app.setQueryMode('byFace', this)">按脸片查</button>
+                <button onclick="app.setQueryMode('byHair', this)">按配件查</button>
             </div>
 
-            <div class="list-header">
-                <h3>所有记录</h3>
+            <div class="query-box">
+                <select id="queryFace" onchange="app.queryMatches()">
+                    <option value="">选择脸片...</option>
+                </select>
+                <select id="queryHair" onchange="app.queryByHair()" style="display:none">
+                    <option value="">选择配件...</option>
+                </select>
             </div>
-            <div id="matchList" class="match-list"></div>
+
+            <div class="results" id="matchResults"></div>
+
+            <div class="list-header">全部记录</div>
+            <div class="list" id="matchList"></div>
         </div>
     </div>
 
@@ -298,3 +158,4 @@
     <script src="js/app.js"></script>
 </body>
 </html>
+
