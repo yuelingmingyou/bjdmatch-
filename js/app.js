@@ -3,7 +3,6 @@ const app = {
     queryMode: 'byFace',
     
     init() {
-        this.updateStats();
         this.renderFaces();
         this.renderHairs();
         this.renderMatches();
@@ -11,7 +10,6 @@ const app = {
         this.populateEyeSizes();
     },
     
-    // tabs
     switchTab(name, btn) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -20,30 +18,26 @@ const app = {
         if (name === 'matches') this.populateMatchSelects();
     },
     
-    // stats
-    updateStats() {
-        const d = DataStore.getAll();
-        document.getElementById('faceCount').textContent = d.faces.length;
-        document.getElementById('frontHairCount').textContent = d.hairs.filter(h => h.type === 'front' || h.type === 'set').length;
-        document.getElementById('backHairCount').textContent = d.hairs.filter(h => h.type === 'back' || h.type === 'set').length;
-        document.getElementById('matchCount').textContent = d.matches.length;
+    esc(s) {
+        if (!s) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
     },
     
     // faces
     saveFace(e) {
         e.preventDefault();
-        const face = {
+        DataStore.saveFace({
             id: document.getElementById('faceId').value || null,
             name: document.getElementById('faceName').value.trim(),
             brand: document.getElementById('faceBrand').value.trim(),
             eyeSize: parseFloat(document.getElementById('eyeSize').value),
             headSize: document.getElementById('headSize').value ? parseFloat(document.getElementById('headSize').value) : null,
             note: document.getElementById('faceNote').value.trim()
-        };
-        DataStore.saveFace(face);
+        });
         this.resetForm('faceForm');
         this.renderFaces();
-        this.updateStats();
         this.populateSelects();
         this.populateEyeSizes();
         document.getElementById('faceSubmitBtn').textContent = '添加';
@@ -59,43 +53,36 @@ const app = {
         document.getElementById('headSize').value = f.headSize || '';
         document.getElementById('faceNote').value = f.note || '';
         document.getElementById('faceSubmitBtn').textContent = '更新';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     
     deleteFace(id) {
-        if (!confirm('删除脸片？相关匹配也会被删除。')) return;
+        if (!confirm('删除？')) return;
         DataStore.deleteFace(id);
         this.renderFaces();
-        this.updateStats();
     },
     
     renderFaces(faces) {
         faces = faces || DataStore.getFaces();
         const el = document.getElementById('faceList');
-        document.getElementById('faceListCount').textContent = faces.length;
         
         if (!faces.length) {
-            el.innerHTML = '<div class="empty-hint">暂无脸片</div>';
+            el.innerHTML = '<div class="empty">暂无脸片</div>';
             return;
         }
         
         el.innerHTML = faces.map(f => `
             <div class="card">
-                <div class="card-header">
-                    <span class="card-title">${this.esc(f.name)}</span>
-                </div>
-                <div class="card-body">
-                    ${f.brand ? `<div>${this.esc(f.brand)}</div>` : ''}
-                    <div>眼珠 ${f.eyeSize}mm${f.headSize ? ` / 头围 ${f.headSize}cm` : ''}</div>
-                    ${f.note ? `<div style="margin-top:4px;color:var(--text-dark)">${this.esc(f.note)}</div>` : ''}
-                </div>
-                <div class="card-tags">
-                    <span class="tag accent">${f.eyeSize}mm</span>
-                    ${f.headSize ? `<span class="tag">${f.headSize}cm</span>` : ''}
+                <div class="card-main">
+                    <div class="card-title">${this.esc(f.name)}${f.brand ? ` <span style="color:var(--text-lighter)">· ${this.esc(f.brand)}</span>` : ''}</div>
+                    <div class="card-meta">
+                        <span class="card-tag eye">${f.eyeSize}mm</span>
+                        ${f.headSize ? `<span class="card-tag head">${f.headSize}cm</span>` : ''}
+                        ${f.note ? `<span>${this.esc(f.note)}</span>` : ''}
+                    </div>
                 </div>
                 <div class="card-actions">
-                    <button onclick="app.editFace('${f.id}')" class="btn btn-secondary">编辑</button>
-                    <button onclick="app.deleteFace('${f.id}')" class="btn btn-secondary btn-danger">删除</button>
+                    <button onclick="app.editFace('${f.id}')">编辑</button>
+                    <button class="danger" onclick="app.deleteFace('${f.id}')">删除</button>
                 </div>
             </div>
         `).join('');
@@ -105,13 +92,11 @@ const app = {
         let faces = DataStore.getFaces();
         const eyeSize = document.getElementById('eyeSizeFilter').value;
         const search = document.getElementById('faceSearch').value.toLowerCase().trim();
-        
         if (eyeSize) faces = faces.filter(f => f.eyeSize == eyeSize);
         if (search) faces = faces.filter(f => 
             f.name.toLowerCase().includes(search) || 
             (f.brand && f.brand.toLowerCase().includes(search))
         );
-        
         this.renderFaces(faces);
     },
     
@@ -119,25 +104,23 @@ const app = {
         const sel = document.getElementById('eyeSizeFilter');
         const val = sel.value;
         const sizes = DataStore.getEyeSizes();
-        sel.innerHTML = '<option value="">全部</option>' + sizes.map(s => `<option value="${s}">${s}mm</option>`).join('');
+        sel.innerHTML = '<option value="">全部眼珠</option>' + sizes.map(s => `<option value="${s}">${s}mm</option>`).join('');
         sel.value = val;
     },
     
     // hairs
     saveHair(e) {
         e.preventDefault();
-        const hair = {
+        DataStore.saveHair({
             id: document.getElementById('hairId').value || null,
             name: document.getElementById('hairName').value.trim(),
             type: document.getElementById('hairType').value,
             brand: document.getElementById('hairBrand').value.trim(),
             headSize: document.getElementById('hairHeadSize').value ? parseFloat(document.getElementById('hairHeadSize').value) : null,
             note: document.getElementById('hairNote').value.trim()
-        };
-        DataStore.saveHair(hair);
+        });
         this.resetForm('hairForm');
         this.renderHairs();
-        this.updateStats();
         this.populateSelects();
         document.getElementById('hairSubmitBtn').textContent = '添加';
     },
@@ -152,14 +135,12 @@ const app = {
         document.getElementById('hairHeadSize').value = h.headSize || '';
         document.getElementById('hairNote').value = h.note || '';
         document.getElementById('hairSubmitBtn').textContent = '更新';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     
     deleteHair(id) {
-        if (!confirm('删除配件？相关匹配也会被删除。')) return;
+        if (!confirm('删除？')) return;
         DataStore.deleteHair(id);
         this.renderHairs();
-        this.updateStats();
     },
     
     renderHairs() {
@@ -167,26 +148,25 @@ const app = {
         const el = document.getElementById('hairList');
         
         if (!hairs.length) {
-            el.innerHTML = '<div class="empty-hint">暂无配件</div>';
+            el.innerHTML = '<div class="empty">暂无配件</div>';
             return;
         }
         
-        const typeNames = { front: '前发', back: '后发', set: '套装' };
+        const typeNames = { front: '前', back: '后', set: '套' };
         
         el.innerHTML = hairs.map(h => `
             <div class="card">
-                <div class="card-header">
-                    <span class="card-title">${this.esc(h.name)}</span>
-                    <span class="card-type ${h.type}">${typeNames[h.type]}</span>
-                </div>
-                <div class="card-body">
-                    ${h.brand ? `<div>${this.esc(h.brand)}</div>` : ''}
-                    ${h.headSize ? `<div>参考头围 ${h.headSize}cm</div>` : ''}
-                    ${h.note ? `<div style="margin-top:4px;color:var(--text-dark)">${this.esc(h.note)}</div>` : ''}
+                <div class="card-type ${h.type}">${typeNames[h.type]}</div>
+                <div class="card-main">
+                    <div class="card-title">${this.esc(h.name)}${h.brand ? ` <span style="color:var(--text-lighter)">· ${this.esc(h.brand)}</span>` : ''}</div>
+                    <div class="card-meta">
+                        ${h.headSize ? `<span>头围 ${h.headSize}cm</span>` : ''}
+                        ${h.note ? `<span>${this.esc(h.note)}</span>` : ''}
+                    </div>
                 </div>
                 <div class="card-actions">
-                    <button onclick="app.editHair('${h.id}')" class="btn btn-secondary">编辑</button>
-                    <button onclick="app.deleteHair('${h.id}')" class="btn btn-secondary btn-danger">删除</button>
+                    <button onclick="app.editHair('${h.id}')">编辑</button>
+                    <button class="danger" onclick="app.deleteHair('${h.id}')">删除</button>
                 </div>
             </div>
         `).join('');
@@ -194,7 +174,7 @@ const app = {
     
     filterHairs(type, btn) {
         this.currentHairFilter = type;
-        document.querySelectorAll('.type-filter').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.type-tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.renderHairs();
     },
@@ -202,9 +182,8 @@ const app = {
     // matches
     populateSelects() {
         const faces = DataStore.getFaces();
-        const hairs = DataStore.getHairs();
         const makeOpts = (items, empty) => `<option value="">${empty}</option>` + items.map(i => 
-            `<option value="${i.id}">${this.esc(i.name)}${i.eyeSize ? ` (${i.eyeSize}mm)` : i.headSize ? ` (${i.headSize}cm)` : ''}</option>`
+            `<option value="${i.id}">${this.esc(i.name)}</option>`
         ).join('');
         
         const mf = document.getElementById('matchFace');
@@ -220,18 +199,18 @@ const app = {
         const backs = hairs.filter(h => h.type === 'back' || h.type === 'set');
         const makeOpts = (items, empty) => `<option value="">${empty}</option>` + items.map(i => `<option value="${i.id}">${this.esc(i.name)}</option>`).join('');
         
-        document.getElementById('matchFrontHair').innerHTML = makeOpts(fronts, '无');
-        document.getElementById('matchBackHair').innerHTML = makeOpts(backs, '无');
+        document.getElementById('matchFrontHair').innerHTML = makeOpts(fronts, '前发');
+        document.getElementById('matchBackHair').innerHTML = makeOpts(backs, '后发');
         document.getElementById('queryHair').innerHTML = makeOpts(hairs, '选择...');
     },
     
     setQueryMode(mode, btn) {
         this.queryMode = mode;
-        document.querySelectorAll('.query-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.query-toggle button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById('queryFaceField').style.display = mode === 'byFace' ? 'block' : 'none';
-        document.getElementById('queryHairField').style.display = mode === 'byHair' ? 'block' : 'none';
-        document.getElementById('matchResults').innerHTML = '<div class="empty-hint">选择上方条件查看结果</div>';
+        document.getElementById('queryFace').style.display = mode === 'byFace' ? 'block' : 'none';
+        document.getElementById('queryHair').style.display = mode === 'byHair' ? 'block' : 'none';
+        document.getElementById('matchResults').innerHTML = '';
     },
     
     saveMatch(e) {
@@ -240,72 +219,71 @@ const app = {
         const frontId = document.getElementById('matchFrontHair').value;
         const backId = document.getElementById('matchBackHair').value;
         const result = document.querySelector('input[name="matchResult"]:checked')?.value;
-        const detail = document.getElementById('matchDetail').value.trim();
         
         if (!faceId || !result) { alert('请填写必填项'); return; }
         if (!frontId && !backId) { alert('请至少选择一个配件'); return; }
         
-        DataStore.saveMatch({ faceId, frontHairId: frontId || '', backHairId: backId || '', result, detail });
+        DataStore.saveMatch({
+            faceId,
+            frontHairId: frontId || '',
+            backHairId: backId || '',
+            result,
+            detail: document.getElementById('matchDetail').value.trim()
+        });
         this.resetForm('matchForm');
-        this.updateStats();
         this.renderMatches();
     },
     
     queryMatches() {
         const faceId = document.getElementById('queryFace').value;
         const el = document.getElementById('matchResults');
-        if (!faceId) { el.innerHTML = '<div class="empty-hint">选择脸片查看结果</div>'; return; }
+        if (!faceId) { el.innerHTML = ''; return; }
         
         const matches = DataStore.getMatchesByFace(faceId);
         const face = DataStore.getFace(faceId);
         
         if (!matches.length) {
-            el.innerHTML = `<div class="empty-hint">"${this.esc(face.name)}" 暂无匹配记录</div>`;
+            el.innerHTML = '<div class="empty">暂无记录</div>';
             return;
         }
         
         const order = { perfect: 0, good: 1, unknown: 2, poor: 3 };
         matches.sort((a, b) => order[a.result] - order[b.result]);
         
-        el.innerHTML = `<div style="margin-bottom:12px;color:var(--text-dim);font-size:0.9rem">${this.esc(face.name)} 的匹配结果</div>` +
-            matches.map(m => this.renderResultCard(m, face, DataStore.getHair(m.frontHairId), DataStore.getHair(m.backHairId))).join('');
+        el.innerHTML = matches.map(m => this.makeResultCard(m, face, DataStore.getHair(m.frontHairId), DataStore.getHair(m.backHairId))).join('');
     },
     
     queryByHair() {
         const hairId = document.getElementById('queryHair').value;
         const el = document.getElementById('matchResults');
-        if (!hairId) { el.innerHTML = '<div class="empty-hint">选择配件查看结果</div>'; return; }
+        if (!hairId) { el.innerHTML = ''; return; }
         
         const matches = DataStore.getMatchesByHair(hairId);
-        const hair = DataStore.getHair(hairId);
-        
         if (!matches.length) {
-            el.innerHTML = `<div class="empty-hint">"${this.esc(hair.name)}" 暂无匹配记录</div>`;
+            el.innerHTML = '<div class="empty">暂无记录</div>';
             return;
         }
         
         const order = { perfect: 0, good: 1, unknown: 2, poor: 3 };
         matches.sort((a, b) => order[a.result] - order[b.result]);
         
-        el.innerHTML = `<div style="margin-bottom:12px;color:var(--text-dim);font-size:0.9rem">${this.esc(hair.name)} 兼容的脸片</div>` +
-            matches.map(m => this.renderResultCard(m, DataStore.getFace(m.faceId), 
-                m.frontHairId === hairId ? hair : DataStore.getHair(m.frontHairId),
-                m.backHairId === hairId ? hair : DataStore.getHair(m.backHairId)
-            )).join('');
+        el.innerHTML = matches.map(m => this.makeResultCard(m, DataStore.getFace(m.faceId),
+            m.frontHairId === hairId ? DataStore.getHair(hairId) : DataStore.getHair(m.frontHairId),
+            m.backHairId === hairId ? DataStore.getHair(hairId) : DataStore.getHair(m.backHairId)
+        )).join('');
     },
     
-    renderResultCard(match, face, frontHair, backHair) {
-        const labels = { perfect: 'OK', good: '~', poor: 'NO', unknown: '?' };
+    makeResultCard(match, face, frontHair, backHair) {
         const parts = [];
         if (frontHair) parts.push(`前 ${this.esc(frontHair.name)}`);
         if (backHair) parts.push(`后 ${this.esc(backHair.name)}`);
         
         return `
             <div class="result-card ${match.result}">
-                <div class="result-status">${labels[match.result]}</div>
-                <div class="result-info">
-                    <h4>${this.esc(face.name)}${parts.length ? ' + ' + parts.join(' / ') : ''}</h4>
-                    ${match.detail ? `<p>${this.esc(match.detail)}</p>` : ''}
+                <div class="result-dot"></div>
+                <div class="result-main">
+                    <div class="result-name">${this.esc(face.name)}${parts.length ? ' + ' + parts.join(' / ') : ''}</div>
+                    ${match.detail ? `<div class="result-detail">${this.esc(match.detail)}</div>` : ''}
                 </div>
             </div>
         `;
@@ -316,7 +294,7 @@ const app = {
         const el = document.getElementById('matchList');
         
         if (!matches.length) {
-            el.innerHTML = '<div class="empty-hint">暂无匹配记录</div>';
+            el.innerHTML = '<div class="empty">暂无记录</div>';
             return;
         }
         
@@ -333,21 +311,20 @@ const app = {
             return `
                 <div class="match-item">
                     <div class="match-status ${m.result}"></div>
-                    <div class="match-combo">
-                        <div class="face-name">${this.esc(face.name)}</div>
-                        <div class="hair-parts">${parts.join(' / ')}</div>
-                        ${m.detail ? `<div class="detail">${this.esc(m.detail)}</div>` : ''}
+                    <div class="match-body">
+                        <div class="match-title">${this.esc(face.name)}</div>
+                        <div class="match-parts">${parts.join(' / ')}</div>
+                        ${m.detail ? `<div class="match-note">${this.esc(m.detail)}</div>` : ''}
                     </div>
-                    <button onclick="app.deleteMatch('${m.id}')" class="btn btn-secondary btn-danger">删除</button>
+                    <button onclick="app.deleteMatch('${m.id}')" class="btn-ghost" style="height:32px;padding:0 12px;font-size:12px">删除</button>
                 </div>
             `;
         }).join('');
     },
     
     deleteMatch(id) {
-        if (!confirm('删除这条记录？')) return;
+        if (!confirm('删除？')) return;
         DataStore.deleteMatch(id);
-        this.updateStats();
         this.renderMatches();
     },
     
@@ -362,14 +339,6 @@ const app = {
         document.getElementById(type + 'SubmitBtn').textContent = '添加';
     },
     
-    esc(s) {
-        if (!s) return '';
-        const d = document.createElement('div');
-        d.textContent = s;
-        return d.innerHTML;
-    },
-    
-    // data
     exportData() {
         const blob = new Blob([DataStore.export()], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -386,7 +355,6 @@ const app = {
         const reader = new FileReader();
         reader.onload = e => {
             if (DataStore.import(e.target.result)) {
-                alert('导入成功');
                 this.init();
             } else {
                 alert('导入失败');
@@ -397,7 +365,7 @@ const app = {
     },
     
     clearAll() {
-        if (!confirm('清空所有数据？建议先导出备份。')) return;
+        if (!confirm('清空所有数据？')) return;
         DataStore.clear();
         this.init();
     }
