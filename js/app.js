@@ -25,7 +25,6 @@ const app = {
         return d.innerHTML;
     },
     
-    // faces
     saveFace(e) {
         e.preventDefault();
         DataStore.saveFace({
@@ -108,7 +107,6 @@ const app = {
         sel.value = val;
     },
     
-    // hairs
     saveHair(e) {
         e.preventDefault();
         DataStore.saveHair({
@@ -179,7 +177,6 @@ const app = {
         this.renderHairs();
     },
     
-    // matches
     populateSelects() {
         const faces = DataStore.getFaces();
         const makeOpts = (items, empty) => `<option value="">${empty}</option>` + items.map(i => 
@@ -328,7 +325,6 @@ const app = {
         this.renderMatches();
     },
     
-    // utils
     resetForm(id) {
         document.getElementById(id).reset();
         document.getElementById(id).querySelector('input[type="hidden"]').value = '';
