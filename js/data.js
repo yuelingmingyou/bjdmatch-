@@ -14,7 +14,6 @@ const DataStore = {
         return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     },
     
-    // faces
     getFaces() { return this.getAll().faces; },
     getFace(id) { return this.getFaces().find(f => f.id === id); },
     
@@ -39,7 +38,6 @@ const DataStore = {
         this.save(data);
     },
     
-    // hairs
     getHairs(type) {
         const all = this.getAll().hairs;
         return type && type !== 'all' ? all.filter(h => h.type === type) : all;
@@ -67,7 +65,6 @@ const DataStore = {
         this.save(data);
     },
     
-    // matches
     getMatches() { return this.getAll().matches; },
     
     findMatch(faceId, frontId, backId) {
@@ -102,14 +99,12 @@ const DataStore = {
     getMatchesByFace(id) { return this.getMatches().filter(m => m.faceId === id); },
     getMatchesByHair(id) { return this.getMatches().filter(m => m.frontHairId === id || m.backHairId === id); },
     
-    // filters
     getEyeSizes() {
         const sizes = new Set();
         this.getFaces().forEach(f => { if (f.eyeSize) sizes.add(parseFloat(f.eyeSize)); });
         return Array.from(sizes).sort((a, b) => a - b);
     },
     
-    // import/export
     export() { return JSON.stringify(this.getAll(), null, 2); },
     
     import(json) {
