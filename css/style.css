@@ -22,14 +22,16 @@
     --set: #a8b896;
     --shadow: 0 1px 3px rgba(0,0,0,0.04);
     --shadow-hover: 0 4px 12px rgba(0,0,0,0.06);
-    --radius: 12px;
-    --radius-sm: 8px;
+    --radius: 16px;
+    --radius-sm: 12px;
+    --radius-xs: 8px;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -39,12 +41,13 @@ body {
     font-size: 14px;
     line-height: 1.5;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
 }
 
 .app {
     max-width: 720px;
     margin: 0 auto;
-    padding: 24px 20px;
+    padding: 16px;
 }
 
 /* Header */
@@ -52,31 +55,33 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+    padding: 0 4px;
 }
 
 .logo {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 700;
     color: var(--text);
 }
 
 .logo svg {
     color: var(--accent);
+    flex-shrink: 0;
 }
 
 .header-actions {
     display: flex;
-    gap: 6px;
+    gap: 8px;
 }
 
 .icon-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-xs);
     border: none;
     background: var(--surface);
     color: var(--text-light);
@@ -86,6 +91,11 @@ header {
     justify-content: center;
     transition: all 0.2s;
     box-shadow: var(--shadow);
+}
+
+.icon-btn svg {
+    display: block;
+    flex-shrink: 0;
 }
 
 .icon-btn:hover {
@@ -101,8 +111,8 @@ header {
 /* Tabs */
 .tabs {
     display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
+    gap: 6px;
+    margin-bottom: 16px;
     background: var(--surface);
     padding: 6px;
     border-radius: var(--radius);
@@ -111,15 +121,16 @@ header {
 
 .tab {
     flex: 1;
-    padding: 10px 16px;
+    padding: 12px;
     border-radius: var(--radius-sm);
     border: none;
     background: transparent;
     color: var(--text-light);
-    font-size: 14px;
+    font-size: 15px;
     cursor: pointer;
     transition: all 0.2s;
     font-weight: 500;
+    text-align: center;
 }
 
 .tab:hover {
@@ -138,11 +149,11 @@ header {
 
 .tab-panel.active {
     display: block;
-    animation: fadeIn 0.25s ease;
+    animation: fadeIn 0.2s ease;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
@@ -171,16 +182,17 @@ header {
 .full { flex: 1; }
 
 input, select {
-    height: 40px;
-    padding: 0 14px;
+    height: 48px;
+    padding: 0 16px;
     border: 1.5px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--bg);
     color: var(--text);
-    font-size: 14px;
+    font-size: 15px;
     outline: none;
     transition: all 0.2s;
     min-width: 0;
+    width: 100%;
 }
 
 input:focus, select:focus {
@@ -193,18 +205,24 @@ input::placeholder {
 
 select {
     cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a948e' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
 }
 
 button {
-    height: 40px;
-    padding: 0 18px;
+    height: 48px;
+    padding: 0 20px;
     border-radius: var(--radius-sm);
     border: none;
-    font-size: 14px;
+    font-size: 15px;
     cursor: pointer;
     transition: all 0.2s;
     font-weight: 500;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btn-primary {
@@ -229,7 +247,7 @@ button {
 /* Result pick */
 .result-pick {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 10px;
 }
 
@@ -241,22 +259,25 @@ button {
 .result-pick input {
     position: absolute;
     opacity: 0;
+    width: 0;
+    height: 0;
 }
 
 .result-pick span {
     display: block;
     text-align: center;
-    padding: 10px;
+    padding: 12px 8px;
     border-radius: var(--radius-sm);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     transition: all 0.2s;
-    border: 1.5px solid transparent;
-}
-
-.result-pick input:not(:checked) + span {
+    border: 2px solid transparent;
     background: var(--bg);
     color: var(--text-light);
+}
+
+.result-pick input:not(:checked) + span:hover {
+    color: var(--text);
 }
 
 .result-pick input:checked + span.ok {
@@ -291,7 +312,8 @@ button {
 }
 
 .filter-bar select {
-    width: 120px;
+    width: 140px;
+    flex-shrink: 0;
 }
 
 .filter-bar input {
@@ -306,7 +328,7 @@ button {
 }
 
 .type-tab {
-    padding: 8px 16px;
+    padding: 8px 18px;
     border-radius: 20px;
     border: none;
     background: transparent;
@@ -314,6 +336,7 @@ button {
     font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
+    font-weight: 500;
 }
 
 .type-tab:hover {
@@ -334,11 +357,12 @@ button {
 }
 
 .query-toggle button {
-    padding: 8px 16px;
+    padding: 10px 18px;
     height: auto;
     background: transparent;
     color: var(--text-light);
-    font-size: 13px;
+    font-size: 14px;
+    border-radius: var(--radius-sm);
 }
 
 .query-toggle button.active {
@@ -367,20 +391,20 @@ button {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: var(--text-light);
-    margin: 20px 0 12px;
+    margin: 24px 0 12px;
     padding-left: 4px;
 }
 
 /* Card - compact */
 .card {
     background: var(--surface);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 14px 16px;
     box-shadow: var(--shadow);
     transition: all 0.2s;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
 }
 
 .card:hover {
@@ -394,24 +418,26 @@ button {
 
 .card-title {
     font-weight: 500;
-    margin-bottom: 2px;
+    font-size: 15px;
+    margin-bottom: 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .card-meta {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-light);
     display: flex;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .card-tag {
     display: inline-block;
     padding: 2px 10px;
-    border-radius: 12px;
+    border-radius: 10px;
     font-size: 12px;
     font-weight: 500;
 }
@@ -427,12 +453,13 @@ button {
 }
 
 .card-type {
-    padding: 3px 12px;
+    padding: 4px 12px;
     border-radius: 12px;
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
 }
 
 .card-type.front { background: #e8f0f5; color: var(--front); }
@@ -452,10 +479,11 @@ button {
 
 .card-actions button {
     height: 32px;
-    padding: 0 12px;
+    padding: 0 14px;
     font-size: 12px;
     background: var(--bg);
     color: var(--text-light);
+    border-radius: var(--radius-xs);
 }
 
 .card-actions button:hover {
@@ -470,7 +498,7 @@ button {
 /* Result cards */
 .result-card {
     background: var(--surface);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 14px 16px;
     margin-bottom: 10px;
     display: flex;
@@ -504,18 +532,19 @@ button {
 
 .result-name {
     font-weight: 500;
+    font-size: 15px;
     margin-bottom: 2px;
 }
 
 .result-detail {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-light);
 }
 
 /* Match item */
 .match-item {
     background: var(--surface);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 14px 16px;
     display: flex;
     align-items: center;
@@ -542,11 +571,12 @@ button {
 
 .match-title {
     font-weight: 500;
+    font-size: 15px;
     margin-bottom: 2px;
 }
 
 .match-parts {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-light);
 }
 
@@ -564,10 +594,29 @@ button {
     font-size: 14px;
 }
 
-/* Responsive */
+/* Mobile */
 @media (max-width: 640px) {
     .app {
-        padding: 16px 12px;
+        padding: 12px;
+    }
+    
+    .logo {
+        font-size: 18px;
+    }
+    
+    .logo svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .icon-btn svg {
+        width: 18px;
+        height: 18px;
     }
     
     .form-line {
@@ -578,16 +627,29 @@ button {
         flex: 1 1 120px !important;
     }
     
-    .card-actions {
-        opacity: 1;
-    }
-    
     .result-pick {
         flex-wrap: wrap;
     }
     
     .result-pick label {
-        flex: 1 1 80px;
+        flex: 1 1 70px;
+    }
+    
+    .result-pick span {
+        padding: 10px 4px;
+        font-size: 13px;
+    }
+    
+    .card-actions {
+        opacity: 1;
+    }
+    
+    .card-actions button {
+        padding: 0 10px;
+    }
+    
+    input, select, button {
+        height: 44px;
     }
 }
 
