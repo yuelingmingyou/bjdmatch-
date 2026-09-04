@@ -1,44 +1,37 @@
-// 主应用逻辑
 const app = {
     currentHairFilter: 'all',
+    queryMode: 'byFace',
     
-    // 初始化
     init() {
         this.updateStats();
-        this.renderFaceList();
-        this.renderHairList();
-        this.renderMatchList();
-        this.updateSelectOptions();
-        this.updateEyeSizeFilter();
+        this.renderFaces();
+        this.renderHairs();
+        this.renderMatches();
+        this.populateSelects();
+        this.populateEyeSizes();
     },
     
-    // 切换标签页
-    switchTab(tabName) {
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        
-        event.target.classList.add('active');
-        document.getElementById(`tab-${tabName}`).classList.add('active');
-        
-        // 刷新数据
-        if (tabName === 'matches') {
-            this.updateMatchSelects();
-        }
+    // tabs
+    switchTab(name, btn) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`tab-${name}`).classList.add('active');
+        if (name === 'matches') this.populateMatchSelects();
     },
     
-    // ========== 统计更新 ==========
+    // stats
     updateStats() {
-        const data = DataStore.getAll();
-        document.getElementById('faceCount').textContent = data.faces.length;
-        document.getElementById('frontHairCount').textContent = data.hairs.filter(h => h.type === 'front' || h.type === 'set').length;
-        document.getElementById('backHairCount').textContent = data.hairs.filter(h => h.type === 'back' || h.type === 'set').length;
-        document.getElementById('matchCount').textContent = data.matches.length;
+        const d = DataStore.getAll();
+        document.getElementById('faceCount').textContent = d.faces.length;
+        document.getElementById('frontHairCount').textContent = d.hairs.filter(h => h.type === 'front' || h.type === 'set').length;
+        document.getElementById('backHairCount').textContent = d.hairs.filter(h => h.type === 'back' || h.type === 'set').length;
+        document.getElementById('matchCount').textContent = d.matches.length;
     },
     
-    // ========== 脸片管理 ==========
-    saveFace(event) {
-        event.preventDefault();
-        
+    // faces
+    saveFace(e) {
+        e.preventDefault();
         const face = {
             id: document.getElementById('faceId').value || null,
             name: document.getElementById('faceName').value.trim(),
@@ -47,93 +40,92 @@ const app = {
             headSize: document.getElementById('headSize').value ? parseFloat(document.getElementById('headSize').value) : null,
             note: document.getElementById('faceNote').value.trim()
         };
-        
         DataStore.saveFace(face);
         this.resetForm('faceForm');
-        this.renderFaceList();
+        this.renderFaces();
         this.updateStats();
-        this.updateSelectOptions();
-        this.updateEyeSizeFilter();
-        
-        // 更新按钮文字
-        document.getElementById('faceSubmitBtn').textContent = '添加脸片';
+        this.populateSelects();
+        this.populateEyeSizes();
+        document.getElementById('faceSubmitBtn').textContent = '添加';
     },
     
     editFace(id) {
-        const face = DataStore.getFaceById(id);
-        if (!face) return;
-        
-        document.getElementById('faceId').value = face.id;
-        document.getElementById('faceName').value = face.name;
-        document.getElementById('faceBrand').value = face.brand || '';
-        document.getElementById('eyeSize').value = face.eyeSize;
-        document.getElementById('headSize').value = face.headSize || '';
-        document.getElementById('faceNote').value = face.note || '';
-        
-        document.getElementById('faceSubmitBtn').textContent = '更新脸片';
+        const f = DataStore.getFace(id);
+        if (!f) return;
+        document.getElementById('faceId').value = f.id;
+        document.getElementById('faceName').value = f.name;
+        document.getElementById('faceBrand').value = f.brand || '';
+        document.getElementById('eyeSize').value = f.eyeSize;
+        document.getElementById('headSize').value = f.headSize || '';
+        document.getElementById('faceNote').value = f.note || '';
+        document.getElementById('faceSubmitBtn').textContent = '更新';
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     
     deleteFace(id) {
-        if (!confirm('确定删除这个脸片？相关匹配记录也会被删除。')) return;
+        if (!confirm('删除脸片？相关匹配也会被删除。')) return;
         DataStore.deleteFace(id);
-        this.renderFaceList();
+        this.renderFaces();
         this.updateStats();
-        this.updateSelectOptions();
     },
     
-    renderFaceList(faces = null) {
+    renderFaces(faces) {
         faces = faces || DataStore.getFaces();
-        const container = document.getElementById('faceList');
+        const el = document.getElementById('faceList');
         document.getElementById('faceListCount').textContent = faces.length;
         
-        if (faces.length === 0) {
-            container.innerHTML = Components.emptyState('还没有脸片，请添加');
+        if (!faces.length) {
+            el.innerHTML = '<div class="empty-hint">暂无脸片</div>';
             return;
         }
         
-        container.innerHTML = faces.map(f => 
-            Components.faceCard(f, 'app.editFace', 'app.deleteFace')
-        ).join('');
+        el.innerHTML = faces.map(f => `
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">${this.esc(f.name)}</span>
+                </div>
+                <div class="card-body">
+                    ${f.brand ? `<div>${this.esc(f.brand)}</div>` : ''}
+                    <div>眼珠 ${f.eyeSize}mm${f.headSize ? ` / 头围 ${f.headSize}cm` : ''}</div>
+                    ${f.note ? `<div style="margin-top:4px;color:var(--text-dark)">${this.esc(f.note)}</div>` : ''}
+                </div>
+                <div class="card-tags">
+                    <span class="tag accent">${f.eyeSize}mm</span>
+                    ${f.headSize ? `<span class="tag">${f.headSize}cm</span>` : ''}
+                </div>
+                <div class="card-actions">
+                    <button onclick="app.editFace('${f.id}')" class="btn btn-secondary">编辑</button>
+                    <button onclick="app.deleteFace('${f.id}')" class="btn btn-secondary btn-danger">删除</button>
+                </div>
+            </div>
+        `).join('');
     },
     
     filterFaces() {
         let faces = DataStore.getFaces();
-        
-        // 按眼珠尺寸筛选
         const eyeSize = document.getElementById('eyeSizeFilter').value;
-        if (eyeSize) {
-            faces = faces.filter(f => f.eyeSize == eyeSize);
-        }
+        const search = document.getElementById('faceSearch').value.toLowerCase().trim();
         
-        // 按关键词搜索
-        const keyword = document.getElementById('faceSearch').value.toLowerCase().trim();
-        if (keyword) {
-            faces = faces.filter(f => 
-                f.name.toLowerCase().includes(keyword) ||
-                (f.brand && f.brand.toLowerCase().includes(keyword)) ||
-                (f.note && f.note.toLowerCase().includes(keyword))
-            );
-        }
+        if (eyeSize) faces = faces.filter(f => f.eyeSize == eyeSize);
+        if (search) faces = faces.filter(f => 
+            f.name.toLowerCase().includes(search) || 
+            (f.brand && f.brand.toLowerCase().includes(search))
+        );
         
-        this.renderFaceList(faces);
+        this.renderFaces(faces);
     },
     
-    updateEyeSizeFilter() {
-        const select = document.getElementById('eyeSizeFilter');
-        const currentValue = select.value;
+    populateEyeSizes() {
+        const sel = document.getElementById('eyeSizeFilter');
+        const val = sel.value;
         const sizes = DataStore.getEyeSizes();
-        
-        select.innerHTML = '<option value="">全部尺寸</option>' +
-            sizes.map(s => `<option value="${s}">${s}mm</option>`).join('');
-        
-        select.value = currentValue;
+        sel.innerHTML = '<option value="">全部</option>' + sizes.map(s => `<option value="${s}">${s}mm</option>`).join('');
+        sel.value = val;
     },
     
-    // ========== 前后发管理 ==========
-    saveHair(event) {
-        event.preventDefault();
-        
+    // hairs
+    saveHair(e) {
+        e.preventDefault();
         const hair = {
             id: document.getElementById('hairId').value || null,
             name: document.getElementById('hairName').value.trim(),
@@ -142,309 +134,274 @@ const app = {
             headSize: document.getElementById('hairHeadSize').value ? parseFloat(document.getElementById('hairHeadSize').value) : null,
             note: document.getElementById('hairNote').value.trim()
         };
-        
         DataStore.saveHair(hair);
         this.resetForm('hairForm');
-        this.renderHairList();
+        this.renderHairs();
         this.updateStats();
-        this.updateSelectOptions();
-        
+        this.populateSelects();
         document.getElementById('hairSubmitBtn').textContent = '添加';
     },
     
     editHair(id) {
-        const hair = DataStore.getHairById(id);
-        if (!hair) return;
-        
-        document.getElementById('hairId').value = hair.id;
-        document.getElementById('hairName').value = hair.name;
-        document.getElementById('hairType').value = hair.type;
-        document.getElementById('hairBrand').value = hair.brand || '';
-        document.getElementById('hairHeadSize').value = hair.headSize || '';
-        document.getElementById('hairNote').value = hair.note || '';
-        
+        const h = DataStore.getHair(id);
+        if (!h) return;
+        document.getElementById('hairId').value = h.id;
+        document.getElementById('hairName').value = h.name;
+        document.getElementById('hairType').value = h.type;
+        document.getElementById('hairBrand').value = h.brand || '';
+        document.getElementById('hairHeadSize').value = h.headSize || '';
+        document.getElementById('hairNote').value = h.note || '';
         document.getElementById('hairSubmitBtn').textContent = '更新';
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     
     deleteHair(id) {
-        if (!confirm('确定删除？相关匹配记录也会被删除。')) return;
+        if (!confirm('删除配件？相关匹配也会被删除。')) return;
         DataStore.deleteHair(id);
-        this.renderHairList();
+        this.renderHairs();
         this.updateStats();
-        this.updateSelectOptions();
     },
     
-    renderHairList() {
-        let hairs = DataStore.getHairs();
-        if (this.currentHairFilter !== 'all') {
-            hairs = hairs.filter(h => h.type === this.currentHairFilter);
-        }
+    renderHairs() {
+        let hairs = DataStore.getHairs(this.currentHairFilter);
+        const el = document.getElementById('hairList');
         
-        const container = document.getElementById('hairList');
-        
-        if (hairs.length === 0) {
-            container.innerHTML = Components.emptyState('还没有配件，请添加');
+        if (!hairs.length) {
+            el.innerHTML = '<div class="empty-hint">暂无配件</div>';
             return;
         }
         
-        container.innerHTML = hairs.map(h => 
-            Components.hairCard(h, 'app.editHair', 'app.deleteHair')
-        ).join('');
+        const typeNames = { front: '前发', back: '后发', set: '套装' };
+        
+        el.innerHTML = hairs.map(h => `
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">${this.esc(h.name)}</span>
+                    <span class="card-type ${h.type}">${typeNames[h.type]}</span>
+                </div>
+                <div class="card-body">
+                    ${h.brand ? `<div>${this.esc(h.brand)}</div>` : ''}
+                    ${h.headSize ? `<div>参考头围 ${h.headSize}cm</div>` : ''}
+                    ${h.note ? `<div style="margin-top:4px;color:var(--text-dark)">${this.esc(h.note)}</div>` : ''}
+                </div>
+                <div class="card-actions">
+                    <button onclick="app.editHair('${h.id}')" class="btn btn-secondary">编辑</button>
+                    <button onclick="app.deleteHair('${h.id}')" class="btn btn-secondary btn-danger">删除</button>
+                </div>
+            </div>
+        `).join('');
     },
     
-    filterHairs(type) {
+    filterHairs(type, btn) {
         this.currentHairFilter = type;
-        document.querySelectorAll('.hair-filters .filter-btn').forEach(btn => {
-            btn.classList.toggle('active', 
-                (type === 'all' && btn.textContent === '全部') ||
-                (type === 'front' && btn.textContent === '前发') ||
-                (type === 'back' && btn.textContent === '后发') ||
-                (type === 'set' && btn.textContent === '套装')
-            );
-        });
-        this.renderHairList();
+        document.querySelectorAll('.type-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.renderHairs();
     },
     
-    // ========== 匹配管理 ==========
-    updateSelectOptions() {
-        // 更新所有下拉选择框
+    // matches
+    populateSelects() {
         const faces = DataStore.getFaces();
         const hairs = DataStore.getHairs();
-        const frontHairs = hairs.filter(h => h.type === 'front' || h.type === 'set');
-        const backHairs = hairs.filter(h => h.type === 'back' || h.type === 'set');
+        const makeOpts = (items, empty) => `<option value="">${empty}</option>` + items.map(i => 
+            `<option value="${i.id}">${this.esc(i.name)}${i.eyeSize ? ` (${i.eyeSize}mm)` : i.headSize ? ` (${i.headSize}cm)` : ''}</option>`
+        ).join('');
         
-        // 通用选项生成
-        const makeOptions = (items, emptyText) => 
-            `<option value="">${emptyText}</option>` +
-            items.map(i => `<option value="${i.id}">${this.escapeHtml(i.name)} (${i.eyeSize ? i.eyeSize + 'mm' : i.headSize + 'cm'})</option>`).join('');
-        
-        // 匹配表单
-        const matchFace = document.getElementById('matchFace');
-        if (matchFace) matchFace.innerHTML = makeOptions(faces, '请选择脸片');
-        
-        // 查询选择框
-        const queryFace = document.getElementById('queryFace');
-        if (queryFace) queryFace.innerHTML = makeOptions(faces, '选择脸片...');
+        const mf = document.getElementById('matchFace');
+        const qf = document.getElementById('queryFace');
+        if (mf) mf.innerHTML = makeOpts(faces, '选择脸片');
+        if (qf) qf.innerHTML = makeOpts(faces, '选择...');
     },
     
-    updateMatchSelects() {
-        this.updateSelectOptions();
-        
+    populateMatchSelects() {
+        this.populateSelects();
         const hairs = DataStore.getHairs();
-        const frontHairs = hairs.filter(h => h.type === 'front' || h.type === 'set');
-        const backHairs = hairs.filter(h => h.type === 'back' || h.type === 'set');
+        const fronts = hairs.filter(h => h.type === 'front' || h.type === 'set');
+        const backs = hairs.filter(h => h.type === 'back' || h.type === 'set');
+        const makeOpts = (items, empty) => `<option value="">${empty}</option>` + items.map(i => `<option value="${i.id}">${this.esc(i.name)}</option>`).join('');
         
-        const makeOptions = (items, emptyText) => 
-            `<option value="">${emptyText}</option>` +
-            items.map(i => `<option value="${i.id}">${this.escapeHtml(i.name)}</option>`).join('');
-        
-        const matchFront = document.getElementById('matchFrontHair');
-        const matchBack = document.getElementById('matchBackHair');
-        if (matchFront) matchFront.innerHTML = makeOptions(frontHairs, '无/未测试');
-        if (matchBack) matchBack.innerHTML = makeOptions(backHairs, '无/未测试');
-        
-        // 反向查询
-        const queryHair = document.getElementById('queryHair');
-        if (queryHair) queryHair.innerHTML = makeOptions(hairs, '选择前发/后发...');
+        document.getElementById('matchFrontHair').innerHTML = makeOpts(fronts, '无');
+        document.getElementById('matchBackHair').innerHTML = makeOpts(backs, '无');
+        document.getElementById('queryHair').innerHTML = makeOpts(hairs, '选择...');
     },
     
-    updateMatchPreview() {
-        // 可以在这里显示选中脸片的信息
+    setQueryMode(mode, btn) {
+        this.queryMode = mode;
+        document.querySelectorAll('.query-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('queryFaceField').style.display = mode === 'byFace' ? 'block' : 'none';
+        document.getElementById('queryHairField').style.display = mode === 'byHair' ? 'block' : 'none';
+        document.getElementById('matchResults').innerHTML = '<div class="empty-hint">选择上方条件查看结果</div>';
     },
     
-    saveMatch(event) {
-        event.preventDefault();
-        
+    saveMatch(e) {
+        e.preventDefault();
         const faceId = document.getElementById('matchFace').value;
-        const frontHairId = document.getElementById('matchFrontHair').value;
-        const backHairId = document.getElementById('matchBackHair').value;
+        const frontId = document.getElementById('matchFrontHair').value;
+        const backId = document.getElementById('matchBackHair').value;
         const result = document.querySelector('input[name="matchResult"]:checked')?.value;
         const detail = document.getElementById('matchDetail').value.trim();
         
-        if (!faceId || !result) {
-            alert('请填写必填项');
-            return;
-        }
+        if (!faceId || !result) { alert('请填写必填项'); return; }
+        if (!frontId && !backId) { alert('请至少选择一个配件'); return; }
         
-        // 检查是否至少选择了一个配件
-        if (!frontHairId && !backHairId) {
-            alert('请至少选择一个前发或后发');
-            return;
-        }
-        
-        const match = {
-            faceId,
-            frontHairId: frontHairId || '',
-            backHairId: backHairId || '',
-            result,
-            detail
-        };
-        
-        DataStore.saveMatch(match);
+        DataStore.saveMatch({ faceId, frontHairId: frontId || '', backHairId: backId || '', result, detail });
         this.resetForm('matchForm');
         this.updateStats();
-        this.renderMatchList();
-        
-        alert('匹配记录已保存！');
+        this.renderMatches();
     },
     
     queryMatches() {
         const faceId = document.getElementById('queryFace').value;
-        const container = document.getElementById('matchResults');
-        
-        if (!faceId) {
-            container.innerHTML = '<p class="hint">请选择脸片查看可用配件</p>';
-            return;
-        }
+        const el = document.getElementById('matchResults');
+        if (!faceId) { el.innerHTML = '<div class="empty-hint">选择脸片查看结果</div>'; return; }
         
         const matches = DataStore.getMatchesByFace(faceId);
-        const face = DataStore.getFaceById(faceId);
+        const face = DataStore.getFace(faceId);
         
-        if (matches.length === 0) {
-            container.innerHTML = `<div class="empty-state">暂无 "${this.escapeHtml(face.name)}" 的匹配记录<br>请先在"匹配查询"页添加记录</div>`;
+        if (!matches.length) {
+            el.innerHTML = `<div class="empty-hint">"${this.esc(face.name)}" 暂无匹配记录</div>`;
             return;
         }
         
-        // 按结果排序
         const order = { perfect: 0, good: 1, unknown: 2, poor: 3 };
         matches.sort((a, b) => order[a.result] - order[b.result]);
         
-        container.innerHTML = `
-            <h4 style="margin-bottom: 15px;">"${this.escapeHtml(face.name)}" 的匹配结果</h4>
-            ${matches.map(m => {
-                const frontHair = m.frontHairId ? DataStore.getHairById(m.frontHairId) : null;
-                const backHair = m.backHairId ? DataStore.getHairById(m.backHairId) : null;
-                return Components.matchResultCard(m, face, frontHair, backHair);
-            }).join('')}
-        `;
+        el.innerHTML = `<div style="margin-bottom:12px;color:var(--text-dim);font-size:0.9rem">${this.esc(face.name)} 的匹配结果</div>` +
+            matches.map(m => this.renderResultCard(m, face, DataStore.getHair(m.frontHairId), DataStore.getHair(m.backHairId))).join('');
     },
     
     queryByHair() {
         const hairId = document.getElementById('queryHair').value;
-        const container = document.getElementById('matchResults');
-        
-        if (!hairId) {
-            container.innerHTML = '<p class="hint">请选择配件查看兼容脸片</p>';
-            return;
-        }
+        const el = document.getElementById('matchResults');
+        if (!hairId) { el.innerHTML = '<div class="empty-hint">选择配件查看结果</div>'; return; }
         
         const matches = DataStore.getMatchesByHair(hairId);
-        const hair = DataStore.getHairById(hairId);
+        const hair = DataStore.getHair(hairId);
         
-        if (matches.length === 0) {
-            container.innerHTML = `<div class="empty-state">暂无 "${this.escapeHtml(hair.name)}" 的匹配记录</div>`;
+        if (!matches.length) {
+            el.innerHTML = `<div class="empty-hint">"${this.esc(hair.name)}" 暂无匹配记录</div>`;
             return;
         }
         
         const order = { perfect: 0, good: 1, unknown: 2, poor: 3 };
         matches.sort((a, b) => order[a.result] - order[b.result]);
         
-        container.innerHTML = `
-            <h4 style="margin-bottom: 15px;">"${this.escapeHtml(hair.name)}" 兼容的脸片</h4>
-            ${matches.map(m => {
-                const face = DataStore.getFaceById(m.faceId);
-                const otherHair = m.frontHairId === hairId 
-                    ? (m.backHairId ? DataStore.getHairById(m.backHairId) : null)
-                    : (m.frontHairId ? DataStore.getHairById(m.frontHairId) : null);
-                return Components.matchResultCard(m, face, 
-                    m.frontHairId === hairId ? hair : otherHair,
-                    m.backHairId === hairId ? hair : otherHair
-                );
-            }).join('')}
+        el.innerHTML = `<div style="margin-bottom:12px;color:var(--text-dim);font-size:0.9rem">${this.esc(hair.name)} 兼容的脸片</div>` +
+            matches.map(m => this.renderResultCard(m, DataStore.getFace(m.faceId), 
+                m.frontHairId === hairId ? hair : DataStore.getHair(m.frontHairId),
+                m.backHairId === hairId ? hair : DataStore.getHair(m.backHairId)
+            )).join('');
+    },
+    
+    renderResultCard(match, face, frontHair, backHair) {
+        const labels = { perfect: 'OK', good: '~', poor: 'NO', unknown: '?' };
+        const parts = [];
+        if (frontHair) parts.push(`前 ${this.esc(frontHair.name)}`);
+        if (backHair) parts.push(`后 ${this.esc(backHair.name)}`);
+        
+        return `
+            <div class="result-card ${match.result}">
+                <div class="result-status">${labels[match.result]}</div>
+                <div class="result-info">
+                    <h4>${this.esc(face.name)}${parts.length ? ' + ' + parts.join(' / ') : ''}</h4>
+                    ${match.detail ? `<p>${this.esc(match.detail)}</p>` : ''}
+                </div>
+            </div>
         `;
     },
     
-    renderMatchList() {
+    renderMatches() {
         const matches = DataStore.getMatches();
-        const container = document.getElementById('matchList');
+        const el = document.getElementById('matchList');
         
-        if (matches.length === 0) {
-            container.innerHTML = Components.emptyState('还没有匹配记录');
+        if (!matches.length) {
+            el.innerHTML = '<div class="empty-hint">暂无匹配记录</div>';
             return;
         }
         
-        // 按时间倒序
-        const sorted = [...matches].sort((a, b) => b.createdAt - a.createdAt);
+        const sorted = [...matches].sort((a, b) => b.created - a.created);
         
-        container.innerHTML = sorted.map(m => {
-            const face = DataStore.getFaceById(m.faceId);
-            const frontHair = m.frontHairId ? DataStore.getHairById(m.frontHairId) : null;
-            const backHair = m.backHairId ? DataStore.getHairById(m.backHairId) : null;
-            return Components.matchItem(m, face, frontHair, backHair, 'app.deleteMatch');
+        el.innerHTML = sorted.map(m => {
+            const face = DataStore.getFace(m.faceId);
+            const fh = m.frontHairId ? DataStore.getHair(m.frontHairId) : null;
+            const bh = m.backHairId ? DataStore.getHair(m.backHairId) : null;
+            const parts = [];
+            if (fh) parts.push(`前:${this.esc(fh.name)}`);
+            if (bh) parts.push(`后:${this.esc(bh.name)}`);
+            
+            return `
+                <div class="match-item">
+                    <div class="match-status ${m.result}"></div>
+                    <div class="match-combo">
+                        <div class="face-name">${this.esc(face.name)}</div>
+                        <div class="hair-parts">${parts.join(' / ')}</div>
+                        ${m.detail ? `<div class="detail">${this.esc(m.detail)}</div>` : ''}
+                    </div>
+                    <button onclick="app.deleteMatch('${m.id}')" class="btn btn-secondary btn-danger">删除</button>
+                </div>
+            `;
         }).join('');
     },
     
     deleteMatch(id) {
-        if (!confirm('确定删除这条匹配记录？')) return;
+        if (!confirm('删除这条记录？')) return;
         DataStore.deleteMatch(id);
         this.updateStats();
-        this.renderMatchList();
+        this.renderMatches();
     },
     
-    // ========== 工具方法 ==========
-    resetForm(formId) {
-        document.getElementById(formId).reset();
-        document.getElementById(formId).querySelector('input[type="hidden"]').value = '';
+    // utils
+    resetForm(id) {
+        document.getElementById(id).reset();
+        document.getElementById(id).querySelector('input[type="hidden"]').value = '';
     },
     
     cancelEdit(type) {
         this.resetForm(type + 'Form');
-        document.getElementById(type + 'SubmitBtn').textContent = type === 'face' ? '添加脸片' : '添加';
+        document.getElementById(type + 'SubmitBtn').textContent = '添加';
     },
     
-    escapeHtml(text) {
-        return Components.escapeHtml(text);
+    esc(s) {
+        if (!s) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
     },
     
-    // ========== 导入导出 ==========
+    // data
     exportData() {
-        const data = DataStore.exportToJson();
-        const blob = new Blob([data], { type: 'application/json' });
+        const blob = new Blob([DataStore.export()], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
-        
         const a = document.createElement('a');
         a.href = url;
-        a.download = `bjd-backup-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
+        a.download = `bjd-${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
-        document.body.removeChild(a);
         URL.revokeObjectURL(url);
     },
     
     importData(input) {
         const file = input.files[0];
         if (!file) return;
-        
         const reader = new FileReader();
-        reader.onload = (e) => {
-            if (DataStore.importFromJson(e.target.result)) {
-                alert('导入成功！');
+        reader.onload = e => {
+            if (DataStore.import(e.target.result)) {
+                alert('导入成功');
                 this.init();
             } else {
-                alert('导入失败，请检查文件格式');
+                alert('导入失败');
             }
         };
         reader.readAsText(file);
-        input.value = ''; // 重置以便可以再次选择同一文件
+        input.value = '';
     },
     
     clearAll() {
-        if (!confirm('确定清空所有数据？此操作不可恢复！建议先导出备份。')) return;
-        DataStore.clearAll();
+        if (!confirm('清空所有数据？建议先导出备份。')) return;
+        DataStore.clear();
         this.init();
-    },
-    
-    // Modal
-    closeModal(event) {
-        if (!event || event.target.id === 'modal') {
-            document.getElementById('modal').classList.remove('active');
-        }
     }
 };
 
-// 启动
-document.addEventListener('DOMContentLoaded', () => {
-    app.init();
-});
+document.addEventListener('DOMContentLoaded', () => app.init());
 
